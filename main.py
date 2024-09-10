@@ -1,19 +1,20 @@
 import telebot
 import csv
 import codecs
-
+import datetime
+import os
+from dotenv import load_dotenv
 from rtu_schedule_parser import ExcelScheduleParser, ScheduleData
 from rtu_schedule_parser.constants import Institute, Degree
 from rtu_schedule_parser.downloader import ScheduleDownloader
 import requests
-import json
+from time import sleep
 from telebot.types import ReactionTypeEmoji
-TOKEN = #token
-#real
-TARGET_CHAT_ID = #
-MESSAGE_THREAD_ID = #
-group=#
-
+load_dotenv()
+TOKEN = os.getenv('TOKEN')
+TARGET_CHAT_ID = os.getenv('TARGET_CHAT_ID')
+MESSAGE_THREAD_ID = os.getenv('MESSAGE_THREAD_ID')
+group=os.getenv('GROUP')
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['send_poll_today'])
@@ -33,11 +34,11 @@ def send_polles(message):
         day_of_week_russian = str(days_translation.get(day_of_week_english))
         print(day_of_week_russian)
         # Извлекаем аргументы из сообщения пользователя
-        args = message.text.split()[1:]  # Пропускаем команду '/send_poll'
+        # args = message.text.split()[1:]  # Пропускаем команду '/send_poll'
         
         
         
-        tw = str(int(args[0]))  # Номер недели
+        tw = str(datetime.datetime.now().isocalendar()[1]-35)  # Номер недели
         day = day_of_week_russian  # День недели
 
         
@@ -87,9 +88,11 @@ def send_polles(message):
             data_not_sorted = data['type']
             data_sorted = str(days_dic.get(data_not_sorted))
             bot.send_poll(chat_id=TARGET_CHAT_ID,message_thread_id=MESSAGE_THREAD_ID,question=str(str(data['lesson_num'])+'  '+data_sorted+'  '+'по  '+data['lesson']), is_anonymous=False,options=['Я', 'Не я(у)', 'Не я(н)', 'Опа'])
-        # bot.send_message(TARGET_CHAT_ID, f"Привет мир", message_thread_id=MESSAGE_THREAD_ID)
-
+            
+        
         bot.set_message_reaction(message.chat.id, message.id, [ReactionTypeEmoji('👍')], is_big=False)
+        sleep(5)
+        bot.delete_message(chat_id=message.chat.id,message_id=message.id)
     
     except ValueError:
         bot.reply_to(message, "Ошибка ввода! Убедитесь, что номер недели указан числом.")
